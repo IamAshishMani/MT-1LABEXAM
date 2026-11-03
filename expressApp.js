@@ -24,7 +24,8 @@ function getMissingFields(body) {
 
 function findTask(idParam) {
   const id = Number(idParam);
-  if (!Number.isInteger(id)) {
+  if (!Number.isInteger(id))
+  {
     return null;
   }
   return tasks.find((task) => task.id === id) || null;

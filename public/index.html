@@ -337,7 +337,8 @@
 
         if (!res.ok) {
           showMessage(data.message || 'The task could not be added.', 'fail');
-        } else {
+        } 
+        else {
           showMessage(data.message, 'ok');
           form.reset();
           await loadTasks();
