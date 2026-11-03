@@ -38,7 +38,7 @@ app.get('/tasks/:id', (req, res) => {
   const task = findTask(req.params.id);
 
   if (!task) {
-    return res.status(404).json({ success: false, message: 'Task not found' });
+    return res.status(404).json({ message: 'Task not found' });
   }
 
   res.status(200).json(task);
@@ -49,15 +49,28 @@ app.post('/tasks', (req, res) => {
 
   if (missing.length > 0) {
     return res.status(400).json({
-      success: false,
       message: `Missing required field(s): ${missing.join(', ')}`
     });
   }
 
-  const nextId = tasks.length > 0 ? Math.max(...tasks.map((t) => t.id)) + 1 : 1;
+  let id;
+
+  if (req.body.id !== undefined && req.body.id !== null && String(req.body.id).trim() !== '') {
+    id = Number(req.body.id);
+
+    if (!Number.isInteger(id) || id < 1) {
+      return res.status(400).json({ message: 'id must be a positive integer' });
+    }
+
+    if (tasks.some((t) => t.id === id)) {
+      return res.status(409).json({ message: `A task with id ${id} already exists` });
+    }
+  } else {
+    id = tasks.length > 0 ? Math.max(...tasks.map((t) => t.id)) + 1 : 1;
+  }
 
   const newTask = {
-    id: nextId,
+    id,
     taskName: req.body.taskName,
     assignedTo: req.body.assignedTo,
     status: req.body.status,
@@ -66,25 +79,24 @@ app.post('/tasks', (req, res) => {
 
   tasks.push(newTask);
 
-  res.status(201).json({ success: true, message: 'Task created successfully', task: newTask });
+  res.status(201).json({ message: 'Task added successfully', task: newTask });
 });
 
 app.put('/tasks/:id', (req, res) => {
   const task = findTask(req.params.id);
 
   if (!task) {
-    return res.status(404).json({ success: false, message: 'Task not found' });
+    return res.status(404).json({ message: 'Task not found' });
   }
 
   if (!req.body || typeof req.body !== 'object' || Array.isArray(req.body)) {
-    return res.status(400).json({ success: false, message: 'Request body must be a JSON object' });
+    return res.status(400).json({ message: 'Request body must be a JSON object' });
   }
 
   const updates = requiredFields.filter((field) => req.body[field] !== undefined);
 
   if (updates.length === 0) {
     return res.status(400).json({
-      success: false,
       message: `Provide at least one of: ${requiredFields.join(', ')}`
     });
   }
@@ -95,7 +107,6 @@ app.put('/tasks/:id', (req, res) => {
 
   if (emptyFields.length > 0) {
     return res.status(400).json({
-      success: false,
       message: `Field(s) cannot be empty: ${emptyFields.join(', ')}`
     });
   }
@@ -104,30 +115,30 @@ app.put('/tasks/:id', (req, res) => {
     task[field] = req.body[field];
   });
 
-  res.status(200).json({ success: true, message: 'Task updated successfully', task });
+  res.status(200).json({ message: 'Task updated successfully', task });
 });
 
 app.delete('/tasks/:id', (req, res) => {
   const task = findTask(req.params.id);
 
   if (!task) {
-    return res.status(404).json({ success: false, message: 'Task not found' });
+    return res.status(404).json({ message: 'Task not found' });
   }
 
   tasks = tasks.filter((t) => t.id !== task.id);
 
-  res.status(200).json({ success: true, message: 'Task deleted successfully', task });
+  res.status(200).json({ message: 'Task deleted successfully', task });
 });
 
 app.use((req, res) => {
-  res.status(404).json({ success: false, message: 'Route not found' });
+  res.status(404).json({ message: 'Route not found' });
 });
 
 app.use((err, req, res, next) => {
   if (err.type === 'entity.parse.failed') {
-    return res.status(400).json({ success: false, message: 'Invalid JSON format' });
+    return res.status(400).json({ message: 'Invalid JSON format' });
   }
-  res.status(500).json({ success: false, message: 'Internal server error' });
+  res.status(500).json({ message: 'Internal server error' });
 });
 
 app.listen(PORT, () => {

@@ -21,7 +21,7 @@ function sendHTML(res, statusCode, html) {
 }
 
 function serveHomePage(res) {
-  const filePath = path.join(__dirname, 'public', 'index.html');
+  const filePath = path.join(__dirname, 'public', 'index.html'); 
 
   fs.readFile(filePath, (err, content) => {
     if (err) {
